@@ -575,7 +575,7 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 /* CLAUDE API                                                              */
 /* ────────────────────────────────────────────────────────────────────── */
 async function callClaude(system, user, opts = {}) {
-  const r = await fetch('http://localhost:3001/api/compile', {
+  const r = await fetch('/api/compile', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
