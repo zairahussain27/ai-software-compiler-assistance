@@ -25,7 +25,7 @@ OUTPUT SCHEMA:
     "theme": {
       "primary": "#hex",
       "secondary": "#hex",
-      "mode": "light|dark",
+      "mode": "light",
       "font_family": "string"
     },
     "components": [

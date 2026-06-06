@@ -538,7 +538,7 @@ function validateSchemasOutput(schemas, intent, design) {
   schemas.ui_schema.theme = schemas.ui_schema.theme || {};
   if (!schemas.ui_schema.theme.primary)     { schemas.ui_schema.theme.primary = '#6366f1'; }
   if (!schemas.ui_schema.theme.secondary)   { schemas.ui_schema.theme.secondary = '#8b5cf6'; }
-  if (!['light','dark'].includes(schemas.ui_schema.theme.mode)) { schemas.ui_schema.theme.mode = 'light'; }
+  schemas.ui_schema.theme.mode = 'light';
   if (!schemas.ui_schema.theme.font_family) { schemas.ui_schema.theme.font_family = 'Inter'; }
   if (!Array.isArray(schemas.ui_schema.components)) { schemas.ui_schema.components = []; }
 
