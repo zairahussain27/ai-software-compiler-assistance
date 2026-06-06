@@ -1,0 +1,38 @@
+{
+  "name": "appforge",
+  "version": "1.0.0",
+  "description": "AI App Compiler — Natural language → validated, executable app config via a 5-stage pipeline",
+  "main": "server.js",
+  "scripts": {
+    "start":       "node server.js",
+    "dev":         "nodemon server.js",
+    "eval":        "node runEval.js",
+    "eval:full":   "node runEval.js --full",
+    "eval:edge":   "node runEval.js --category edge",
+    "eval:real":   "node runEval.js --category real",
+    "test":        "jest",
+    "test:watch":  "jest --watch",
+    "test:cover":  "jest --coverage"
+  },
+  "dependencies": {
+    "cors":       "^2.8.5",
+    "express":    "^4.19.2",
+    "dotenv":     "^16.4.5"
+  },
+  "devDependencies": {
+    "jest":       "^29.7.0",
+    "nodemon":    "^3.1.0"
+  },
+  "jest": {
+    "testMatch":       ["**/evaluation/*.test.js"],
+    "testEnvironment": "node",
+    "verbose":         true,
+    "testTimeout":     10000
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm":  ">=9.0.0"
+  },
+  "keywords": ["ai","app-compiler","llm","pipeline","schema-generation","code-generation"],
+  "license": "MIT"
+}

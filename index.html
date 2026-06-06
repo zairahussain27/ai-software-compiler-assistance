@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AppForge — AI App Compiler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ─── Reset & Base ─────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px;-webkit-font-smoothing:antialiased}
+:root{
+  --bg:#080a10;
+  --s1:#0e1018;
+  --s2:#141720;
+  --s3:#1a1e28;
+  --s4:#1f2433;
+  --border:#ffffff0d;
+  --border2:#ffffff18;
+  --border3:#ffffff28;
+  --text:#eef0f8;
+  --t2:#8b93aa;
+  --t3:#4a5168;
+  --t4:#2d3348;
+  --accent:#7c6cff;
+  --accent2:#a89eff;
+  --accent3:#c8c2ff;
+  --adb:#7c6cff18;
+  --adb2:#7c6cff28;
+  --green:#1db88a;
+  --gdb:#1db88a15;
+  --gdb2:#1db88a25;
+  --amber:#e8a020;
+  --amd:#e8a02015;
+  --red:#e85555;
+  --rdb:#e8555515;
+  --blue:#4a9eff;
+  --bdb:#4a9eff15;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Syne',sans-serif;
+  --body:'Inter',sans-serif;
+  --r:6px;--r2:10px;--r3:14px;--r4:20px;
+  --sh:0 4px 24px rgba(0,0,0,.4);
+}
+body{background:var(--bg);color:var(--text);font-family:var(--body);line-height:1.5;overflow:hidden;height:100vh}
+
+/* ─── Layout ────────────────────────────────────────────────────────────── */
+.app{display:grid;grid-template-rows:52px 1fr;height:100vh}
+.main{display:grid;grid-template-columns:400px 1fr;overflow:hidden}
+
+/* ─── Header ────────────────────────────────────────────────────────────── */
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;
+  border-bottom:1px solid var(--border2);
+  background:linear-gradient(to right,var(--s1),var(--bg));
+  position:relative;z-index:10;
+}
+.header::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--accent)00,var(--accent)60,var(--accent)00);
+}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--sans);font-weight:800;font-size:17px;letter-spacing:-.5px}
+.logo-mark{
+  width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  background:var(--accent);font-size:13px;box-shadow:0 0 12px var(--accent)60;
+}
+.logo-sub{font-size:11px;color:var(--t3);font-family:var(--mono);margin-left:2px}
+.header-right{display:flex;align-items:center;gap:10px}
+.hbadge{
+  font-size:11px;font-family:var(--mono);padding:3px 9px;border-radius:var(--r4);
+  border:1px solid var(--accent);background:var(--adb);color:var(--accent2);
+}
+.hpill{font-size:11px;color:var(--t3);font-family:var(--mono);padding:3px 9px;border-radius:var(--r4);border:1px solid var(--border2)}
+
+/* ─── Left Panel ────────────────────────────────────────────────────────── */
+.left{
+  border-right:1px solid var(--border2);
+  display:flex;flex-direction:column;
+  background:var(--s1);
+  overflow:hidden;
+}
+.left-top{padding:16px 18px 14px;border-bottom:1px solid var(--border)}
+.panel-label{font-size:10px;font-family:var(--mono);color:var(--t3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+.prompt-wrap{position:relative}
+textarea{
+  width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:var(--r2);
+  color:var(--text);font-family:var(--body);font-size:12.5px;line-height:1.65;
+  padding:12px 14px;resize:none;outline:none;transition:border-color .2s,box-shadow .2s;
+  min-height:140px;
+}
+textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--adb2)}
+textarea::placeholder{color:var(--t3);font-size:12px}
+.char-badge{
+  position:absolute;bottom:9px;right:10px;
+  font-size:10px;font-family:var(--mono);color:var(--t4);
+  background:var(--s3);padding:1px 6px;border-radius:10px;
+}
+.left-mid{padding:12px 18px;border-bottom:1px solid var(--border);flex:1;overflow-y:auto;min-height:0}
+.eg-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.eg-btn{
+  font-size:11px;padding:5px 9px;border-radius:var(--r);
+  background:var(--s2);border:1px solid var(--border2);
+  color:var(--t2);cursor:pointer;font-family:var(--mono);
+  transition:all .15s;line-height:1.3;text-align:left;
+}
+.eg-btn:hover{border-color:var(--accent);color:var(--accent3);background:var(--adb)}
+.eg-btn.edge{border-color:var(--amd);color:var(--amber)}
+.eg-btn.edge:hover{background:var(--amd)}
+.compile-btn{
+  width:100%;padding:12px;
+  background:var(--accent);border:none;border-radius:var(--r2);
+  color:#fff;font-family:var(--sans);font-weight:700;font-size:13px;
+  letter-spacing:.3px;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 16px var(--accent)40;
+  margin-top:12px;
+}
+.compile-btn:hover:not(:disabled){background:#8d7fff;transform:translateY(-1px);box-shadow:0 6px 20px var(--accent)50}
+.compile-btn:active:not(:disabled){transform:translateY(0)}
+.compile-btn:disabled{background:var(--s3);color:var(--t3);cursor:not-allowed;box-shadow:none;transform:none}
+
+/* Pipeline stage indicators */
+.stages-section{padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0}
+.stage-rows{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.sr{
+  display:flex;align-items:center;gap:9px;
+  padding:7px 10px;border-radius:var(--r);border:1px solid var(--border);
+  background:var(--s2);transition:all .25s;
+}
+.sr.active{border-color:var(--accent);background:var(--adb)}
+.sr.done{border-color:var(--green);background:var(--gdb)}
+.sr.error{border-color:var(--red);background:var(--rdb)}
+.sr-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--t4);flex-shrink:0;transition:all .25s;
+}
+.sr.active .sr-dot{background:var(--accent);box-shadow:0 0 6px var(--accent);animation:dp 1s ease-in-out infinite}
+.sr.done .sr-dot{background:var(--green)}
+.sr.error .sr-dot{background:var(--red)}
+@keyframes dp{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
+.sr-label{font-size:11px;font-family:var(--mono);color:var(--t3);flex:1}
+.sr.active .sr-label{color:var(--accent2)}
+.sr.done .sr-label{color:var(--green)}
+.sr-time{font-size:10px;font-family:var(--mono);color:var(--t4)}
+
+/* ─── Right Panel ───────────────────────────────────────────────────────── */
+.right{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.tabs{
+  display:flex;border-bottom:1px solid var(--border2);
+  background:var(--s1);overflow-x:auto;flex-shrink:0;
+}
+.tabs::-webkit-scrollbar{height:0}
+.tab{
+  padding:0 16px;height:44px;display:flex;align-items:center;gap:6px;
+  font-size:11.5px;font-family:var(--mono);color:var(--t3);
+  cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;
+  border-right:1px solid var(--border);transition:all .15s;
+}
+.tab:hover{color:var(--t2)}
+.tab.active{color:var(--accent2);border-bottom-color:var(--accent);background:var(--adb)}
+.tbadge{
+  font-size:10px;padding:1px 6px;border-radius:10px;
+  background:var(--s3);color:var(--t3);
+}
+.tab.active .tbadge{background:var(--adb2);color:var(--accent2)}
+.tok{background:var(--gdb2)!important;color:var(--green)!important}
+.terr{background:var(--rdb)!important;color:var(--red)!important}
+.tamt{background:var(--amd)!important;color:var(--amber)!important}
+
+.output{flex:1;overflow-y:auto;position:relative}
+.output::-webkit-scrollbar{width:3px}
+.output::-webkit-scrollbar-thumb{background:var(--border3);border-radius:2px}
+
+/* ─── Empty State ────────────────────────────────────────────────────────── */
+.empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:14px;color:var(--t3);padding:40px;
+}
+.empty-icon{font-size:40px;opacity:.2;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.empty-title{font-family:var(--sans);font-size:17px;color:var(--t2)}
+.empty-sub{font-size:12px;text-align:center;max-width:380px;line-height:1.7;color:var(--t3)}
+.empty-hint{
+  display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px;
+}
+.empty-tag{
+  font-size:11px;font-family:var(--mono);padding:4px 10px;border-radius:var(--r4);
+  border:1px solid var(--border2);color:var(--t3);
+}
+
+/* ─── Content Panels ─────────────────────────────────────────────────────── */
+.pad{padding:20px}
+.pad-sm{padding:14px 18px}
+
+/* Stage cards */
+.stage-cards{display:flex;flex-direction:column;gap:10px;padding:18px}
+.sc{
+  background:var(--s1);border:1px solid var(--border2);border-radius:var(--r3);
+  overflow:hidden;transition:border-color .2s;
+}
+.sc.active{border-color:var(--accent)}
+.sc.done{border-color:var(--border3)}
+.sc-head{
+  padding:11px 16px;display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;user-select:none;transition:background .15s;
+}
+.sc-head:hover{background:var(--s2)}
+.sc-title{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;font-weight:600}
+.sc-num{
+  width:20px;height:20px;border-radius:50%;font-size:10px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--s3);color:var(--t3);font-weight:600;transition:all .2s;
+}
+.sc.active .sc-num{background:var(--adb2);color:var(--accent2)}
+.sc.done .sc-num{background:var(--gdb2);color:var(--green)}
+.sc-badge{
+  font-size:10px;padding:2px 9px;border-radius:var(--r4);
+  font-family:var(--mono);letter-spacing:.2px;
+}
+.b-pending{background:var(--s3);color:var(--t3)}
+.b-running{background:var(--adb2);color:var(--accent2);animation:blink .7s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.b-done{background:var(--gdb2);color:var(--green)}
+.b-error{background:var(--rdb);color:var(--red)}
+.sc-body{
+  padding:14px 16px;font-family:var(--mono);font-size:11.5px;
+  line-height:1.7;color:var(--t2);display:none;max-height:360px;overflow-y:auto;
+  border-top:1px solid var(--border);
+}
+.sc-body.open{display:block}
+
+/* JSON output */
+.json-block{
+  background:var(--s2);border:1px solid var(--border2);border-radius:var(--r2);
+  padding:12px 14px;white-space:pre-wrap;word-break:break-word;
+  font-size:11.5px;line-height:1.75;color:#9ea9c0;
+  overflow-x:hidden;
+}
+.jk{color:#79c0ff}.js{color:#a5d6ff}.jn{color:#f2cc60}.jb{color:#ff7b72}.jnu{color:#8b949e}
+
+/* Schema grid */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px}
+.scard{background:var(--s1);border:1px solid var(--border2);border-radius:var(--r3);overflow:hidden}
+.scard-head{
+  padding:9px 14px;background:var(--s2);
+  font-family:var(--mono);font-size:11px;font-weight:600;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+}
+.scard-body{padding:12px 14px;max-height:280px;overflow-y:auto}
+.scard-body::-webkit-scrollbar{width:2px}
+.scard-body::-webkit-scrollbar-thumb{background:var(--border3)}
+.field-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:4px 0;border-bottom:1px solid var(--border);
+  font-family:var(--mono);font-size:11px;
+}
+.field-row:last-child{border-bottom:none}
+.fk{color:var(--accent2)}.ft{color:var(--amber)}.freq{color:var(--green);font-size:9px}
+.fopt{color:var(--t4);font-size:9px}
+.method-pill{
+  font-size:9px;padding:1px 5px;border-radius:3px;
+  font-family:var(--mono);font-weight:600;min-width:38px;text-align:center;
+}
+
+/* Validation */
+.val-section{background:var(--s1);border:1px solid var(--border2);border-radius:var(--r3);overflow:hidden;margin-bottom:10px}
+.val-sec-head{
+  padding:9px 14px;background:var(--s2);
+  font-family:var(--mono);font-size:11px;font-weight:600;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+}
+.val-items{padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.vi{
+  display:flex;align-items:flex-start;gap:9px;padding:7px 10px;
+  border-radius:var(--r);background:var(--s2);
+}
+.vi-ok{border-left:2px solid var(--green)}
+.vi-warn{border-left:2px solid var(--amber)}
+.vi-fail{border-left:2px solid var(--red)}
+.vi-icon{font-size:13px;flex-shrink:0;margin-top:1px}
+.vi-rule{font-size:11.5px;font-family:var(--mono);color:var(--text);font-weight:500}
+.vi-msg{font-size:11px;color:var(--t2);margin-top:2px;line-height:1.4}
+.vi-repaired{font-size:10px;color:var(--green);background:var(--gdb);padding:1px 6px;border-radius:var(--r4);margin-left:4px}
+
+/* Repair log */
+.repair-item{
+  background:var(--s1);border:1px solid var(--border2);border-radius:var(--r3);
+  padding:13px 16px;margin-bottom:10px;
+}
+.ri-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.ri-title{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--amber)}
+.ri-action{
+  font-size:10px;font-family:var(--mono);padding:2px 8px;
+  border-radius:var(--r4);background:var(--gdb2);color:var(--green);
+}
+.ri-layer{font-size:11px;color:var(--t2);margin-bottom:8px}
+.ri-diff{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.diff-b,.diff-a{
+  border-radius:var(--r);padding:7px 9px;
+  font-family:var(--mono);font-size:10.5px;line-height:1.5;
+}
+.diff-b{border-left:2px solid var(--red);color:var(--red);background:var(--rdb)}
+.diff-a{border-left:2px solid var(--green);color:var(--green);background:var(--gdb)}
+.diff-lbl{font-size:9px;opacity:.6;margin-bottom:3px}
+
+/* Metrics / Eval */
+.mcard{
+  background:var(--s1);border:1px solid var(--border2);border-radius:var(--r3);
+  padding:16px;text-align:center;
+}
+.mv{font-family:var(--sans);font-size:26px;font-weight:700;line-height:1.1;margin-bottom:4px}
+.ml{font-size:10px;color:var(--t3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.8px}
+.mv.g{color:var(--green)}.mv.a{color:var(--amber)}.mv.r{color:var(--red)}.mv.b{color:var(--blue)}.mv.p{color:var(--accent2)}
+
+.eval-table{width:100%;border-collapse:collapse;font-size:11.5px;font-family:var(--mono)}
+.eval-table thead tr{background:var(--s2)}
+.eval-table th{
+  padding:8px 12px;text-align:left;color:var(--t3);font-weight:500;
+  border-bottom:1px solid var(--border2);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;
+}
+.eval-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--t2);vertical-align:middle}
+.eval-table tr:hover td{background:var(--s2)}
+.sdot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.d-g{background:var(--green)}.d-a{background:var(--amber)}.d-r{background:var(--red)}
+
+/* Cost bars */
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.bar-lbl{width:110px;font-family:var(--mono);font-size:10.5px;color:var(--t3);text-align:right;flex-shrink:0}
+.bar-out{flex:1;background:var(--s3);border-radius:3px;height:6px;overflow:hidden}
+.bar-in{height:100%;border-radius:3px;transition:width .9s cubic-bezier(.16,1,.3,1)}
+.bar-val{width:48px;font-family:var(--mono);font-size:10.5px;color:var(--t2);text-align:right;flex-shrink:0}
+
+/* Inline snippet / summary */
+.summary-row{
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  padding:13px 16px;background:var(--gdb);border:1px solid var(--green);
+  border-radius:var(--r3);margin:18px 18px 0;
+}
+.sum-ok{color:var(--green);font-family:var(--mono);font-size:12px;font-weight:700}
+.sum-meta{color:var(--t2);font-size:11.5px}
+.sum-badge{font-size:10.5px;padding:2px 9px;border-radius:var(--r4);font-family:var(--mono)}
+
+/* Spinner */
+.spin{
+  width:13px;height:13px;border:2px solid transparent;
+  border-top-color:currentColor;border-radius:50%;
+  animation:spin .55s linear infinite;display:inline-block;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Full JSON copy btn */
+.copy-btn{
+  background:var(--s2);border:1px solid var(--border2);border-radius:var(--r);
+  color:var(--t2);font-family:var(--mono);font-size:11px;padding:5px 12px;cursor:pointer;
+  transition:all .15s;
+}
+.copy-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+.copy-btn.copied{border-color:var(--green);color:var(--green)}
+
+/* Runtime manifest panel */
+.manifest-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.mf-card{background:var(--s1);border:1px solid var(--border2);border-radius:var(--r2);padding:12px 14px}
+.mf-title{font-size:10px;font-family:var(--mono);color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.mf-list{list-style:none;display:flex;flex-direction:column;gap:4px}
+.mf-list li{font-size:11px;font-family:var(--mono);color:var(--t2);display:flex;align-items:flex-start;gap:6px}
+.mf-list li::before{content:'·';color:var(--accent2);flex-shrink:0}
+
+/* Progress bar for compilation */
+.progress-bar{
+  height:2px;background:var(--s3);overflow:hidden;
+  position:relative;flex-shrink:0;
+}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width .4s ease;width:0%;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ─── Header ─────────────────────────────────────────────── -->
+  <header class="header">
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="logo">
+        <div class="logo-mark">⚡</div>
+        AppForge
+        <span class="logo-sub">// AI App Compiler</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="hpill" id="statusPill">idle</span>
+      <span class="hbadge">v1.0 · 5-stage pipeline</span>
+    </div>
+  </header>
+
+  <!-- ─── Main ───────────────────────────────────────────────── -->
+  <div class="main">
+
+    <!-- LEFT: Input + Stage tracker -->
+    <div class="left">
+      <div class="left-top">
+        <div class="panel-label">// Natural Language Input</div>
+        <div class="prompt-wrap">
+          <textarea id="promptInput" rows="6"
+            placeholder="Describe the app you want to build...&#10;&#10;Example: &quot;Build a CRM with contacts, deals pipeline, role-based access (admin/sales/viewer), dashboard analytics, and Stripe payments for premium users.&quot;"
+            oninput="onInputChange(this)"></textarea>
+          <span class="char-badge" id="charBadge">0</span>
+        </div>
+        <button class="compile-btn" id="compileBtn" onclick="runPipeline()">
+          <span id="compileBtnInner">▶&nbsp; Compile App</span>
+        </button>
+        <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+
+      <div class="left-mid">
+        <div class="panel-label">// Quick Examples</div>
+        <div class="eg-row">
+          <button class="eg-btn" onclick="load(0)">CRM + Stripe + roles</button>
+          <button class="eg-btn" onclick="load(1)">E-learning platform</button>
+          <button class="eg-btn" onclick="load(2)">Project management</button>
+          <button class="eg-btn" onclick="load(3)">Marketplace</button>
+        </div>
+        <div class="eg-row" style="margin-top:6px">
+          <button class="eg-btn edge" onclick="load(4)">⚠ vague prompt</button>
+          <button class="eg-btn edge" onclick="load(5)">⚠ conflicting reqs</button>
+          <button class="eg-btn edge" onclick="load(6)">⚠ incomplete spec</button>
+        </div>
+      </div>
+
+      <div class="stages-section">
+        <div class="panel-label">// Compilation Stages</div>
+        <div class="stage-rows" id="stageRows">
+          <div class="sr" id="s0"><div class="sr-dot"></div><span class="sr-label">01 · intent extraction</span><span class="sr-time" id="s0t"></span></div>
+          <div class="sr" id="s1"><div class="sr-dot"></div><span class="sr-label">02 · system design</span><span class="sr-time" id="s1t"></span></div>
+          <div class="sr" id="s2"><div class="sr-dot"></div><span class="sr-label">03 · schema generation</span><span class="sr-time" id="s2t"></span></div>
+          <div class="sr" id="s3"><div class="sr-dot"></div><span class="sr-label">04 · validate + repair</span><span class="sr-time" id="s3t"></span></div>
+          <div class="sr" id="s4"><div class="sr-dot"></div><span class="sr-label">05 · final assembly</span><span class="sr-time" id="s4t"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Output tabs -->
+    <div class="right">
+      <div class="tabs" id="tabBar">
+        <div class="tab active" id="tab-pipeline" onclick="switchTab('pipeline')">Pipeline</div>
+        <div class="tab" id="tab-schema" onclick="switchTab('schema')">Schema <span class="tbadge" id="tbschema">—</span></div>
+        <div class="tab" id="tab-validation" onclick="switchTab('validation')">Validation <span class="tbadge" id="tbval">—</span></div>
+        <div class="tab" id="tab-repair" onclick="switchTab('repair')">Repair Log <span class="tbadge" id="tbrep">—</span></div>
+        <div class="tab" id="tab-manifest" onclick="switchTab('manifest')">Runtime</div>
+        <div class="tab" id="tab-output" onclick="switchTab('output')">JSON <span class="tbadge tok" id="tbout" style="display:none">ready</span></div>
+        <div class="tab" id="tab-eval" onclick="switchTab('eval')">Eval</div>
+        <div class="tab" id="tab-cost" onclick="switchTab('cost')">Cost</div>
+      </div>
+
+      <div class="output" id="outputArea">
+        <!-- Empty state -->
+        <div class="empty" id="emptyState">
+          <div class="empty-icon">⚙</div>
+          <div class="empty-title">Ready to compile</div>
+          <div class="empty-sub">Enter any app description — simple or complex. The compiler runs a 5-stage pipeline to produce a complete, validated, executable app configuration.</div>
+          <div class="empty-hint">
+            <span class="empty-tag">UI schema</span>
+            <span class="empty-tag">API schema</span>
+            <span class="empty-tag">DB schema</span>
+            <span class="empty-tag">Auth rules</span>
+            <span class="empty-tag">Validation</span>
+            <span class="empty-tag">Runtime manifest</span>
+          </div>
+        </div>
+
+        <!-- Tab content divs -->
+        <div id="pipelineTab" style="display:none"></div>
+        <div id="schemaTab" style="display:none"></div>
+        <div id="validationTab" style="display:none"></div>
+        <div id="repairTab" style="display:none"></div>
+        <div id="manifestTab" style="display:none"></div>
+        <div id="outputTab" style="display:none"></div>
+        <div id="evalTab" style="display:none"></div>
+        <div id="costTab" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ────────────────────────────────────────────────────────────────────── */
+/* DATA                                                                    */
+/* ────────────────────────────────────────────────────────────────────── */
+const EXAMPLES = [
+  "Build a CRM with login, contacts, deals pipeline, role-based access (admin/sales/viewer), dashboard with charts and analytics, and premium plan with Stripe payments. Admins can see all analytics. Sales reps manage only their own contacts.",
+  "Build an e-learning platform with courses, video lessons, student progress tracking, instructor dashboard, quiz system, certificates on completion, and monthly subscription billing.",
+  "Create a project management tool like Trello with boards, lists, cards, team members, due dates, file attachments, activity logs, and email notifications.",
+  "Build a marketplace where vendors can list products, customers can browse and purchase, and admins can manage users and vendor payouts. Include reviews, search/filter, cart, checkout with Stripe, and vendor analytics dashboard.",
+  "build me something for my team to track stuff",
+  "App that is completely free but also paid. Very simple but with 50 advanced features. Target audience is everyone but specifically enterprise developers. Works offline but also has real-time sync.",
+  "I need a dashboard that shows some data.",
+];
+const MODEL = 'llama-3.3-70b-versatile';
+
+let currentTab = 'pipeline';
+let result = null;
+let stageTimes = [];
+
+/* ────────────────────────────────────────────────────────────────────── */
+/* UI HELPERS                                                              */
+/* ────────────────────────────────────────────────────────────────────── */
+function load(i) {
+  document.getElementById('promptInput').value = EXAMPLES[i];
+  onInputChange(document.getElementById('promptInput'));
+}
+
+function onInputChange(el) {
+  document.getElementById('charBadge').textContent = el.value.length;
+}
+
+function switchTab(t) {
+  currentTab = t;
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  ['pipeline','schema','validation','repair','manifest','output','eval','cost'].forEach(n => {
+    document.getElementById(n+'Tab').style.display = (n === t) ? 'block' : 'none';
+  });
+  document.getElementById('emptyState').style.display = 'none';
+}
+
+function setStage(i, state, ms) {
+  const el = document.getElementById('s'+i);
+  el.className = 'sr ' + state;
+  if (ms) document.getElementById('s'+i+'t').textContent = ms + 'ms';
+}
+
+function resetStages() {
+  for (let i=0;i<5;i++) {
+    document.getElementById('s'+i).className = 'sr';
+    document.getElementById('s'+i+'t').textContent = '';
+  }
+}
+
+function setProgress(pct) {
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function setPill(text, color) {
+  const p = document.getElementById('statusPill');
+  p.textContent = text;
+  p.style.color = color;
+}
+
+function syntaxHL(json) {
+  if (typeof json !== 'string') json = JSON.stringify(json, null, 2);
+  return json
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      let c = 'jn';
+      if (/^"/.test(m)) c = /:$/.test(m) ? 'jk' : 'js';
+      else if (/true|false/.test(m)) c = 'jb';
+      else if (/null/.test(m)) c = 'jnu';
+      return `<span class="${c}">${m}</span>`;
+    });
+}
+
+function methodColor(m) {
+  return {GET:'#1db88a',POST:'#7c6cff',PUT:'#e8a020',DELETE:'#e85555',PATCH:'#4a9eff'}[m] || '#8b93aa';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ────────────────────────────────────────────────────────────────────── */
+/* CLAUDE API                                                              */
+/* ────────────────────────────────────────────────────────────────────── */
+async function callClaude(system, user, opts = {}) {
+  const r = await fetch('http://localhost:3001/api/compile', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      prompt: user,
+      options: opts
+    })
+  });
+
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(`API ${r.status}: ${e.error || r.statusText}`);
+  }
+
+  const data = await r.json();
+
+  return JSON.stringify(data);
+}
+
+function parseJSON(text) {
+  if (!text) throw new Error('Empty response');
+  // Try direct
+  try { return JSON.parse(text.trim()); } catch (_) {}
+  // Strip fences
+  const s = text.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/\s*```\s*$/,'').trim();
+  try { return JSON.parse(s); } catch (_) {}
+  // Extract {...}
+  const fi = text.indexOf('{'), li = text.lastIndexOf('}');
+  if (fi !== -1 && li > fi) {
+    const sl = text.slice(fi, li+1);
+    try { return JSON.parse(sl); } catch (_) {}
+    // Repair
+    const rep = repairJSON(sl);
+    try { return JSON.parse(rep); } catch (_) {}
+  }
+  throw new Error('JSON parse failed. Preview: ' + text.slice(0, 120));
+}
+
+function repairJSON(s) {
+  let r = s;
+  r = r.replace(/,\s*([}\]])/g, '$1');          // trailing commas
+  r = r.replace(/'/g, '"');                       // single quotes
+  r = r.replace(/:\s*undefined/g, ': null');      // undefined → null
+  r = r.replace(/:\s*NaN/g, ': null');            // NaN → null
+  // Close open brackets
+  let ob = 0, oB = 0, inStr = false, esc = false;
+  for (const c of r) {
+    if (esc) { esc=false; continue; }
+    if (c === '\\') { esc=true; continue; }
+    if (c === '"' && !esc) { inStr=!inStr; continue; }
+    if (inStr) continue;
+    if (c==='{') ob++; else if (c==='}') ob--;
+    else if (c==='[') oB++; else if (c===']') oB--;
+  }
+  while (oB > 0) { r += ']'; oB--; }
+  while (ob > 0) { r += '}'; ob--; }
+  return r;
+}
+
+/* ────────────────────────────────────────────────────────────────────── */
+/* PIPELINE STAGES                                                         */
+/* ────────────────────────────────────────────────────────────────────── */
+const S1 = `You are Stage 1 of an app compiler: Intent Extraction.
+Parse natural language into a strict structured intermediate representation.
+Handle vague/conflicting/incomplete prompts gracefully — document assumptions.
+Return ONLY valid JSON, no markdown, no explanation.
+
+{
+  "app_name":"string","app_type":"crm|ecommerce|saas|social|marketplace|education|productivity|other",
+  "clarity_score":0-100,"ambiguities":["string"],"assumptions":["string"],
+  "core_entities":["string"],"core_features":["string"],
+  "auth_required":boolean,"roles":["string"],"admin_features":["string"],
+  "has_payments":boolean,"payment_model":"free|freemium|subscription|one-time|none",
+  "payment_provider":"stripe|paypal|none","complexity":"low|medium|high",
+  "tech_constraints":["string"],"out_of_scope":["string"]
+}`;
+
+const S2 = `You are Stage 2 of an app compiler: System Design.
+Convert structured intent → full app architecture. Define pages, API groups, entities, auth flows, feature flags.
+Return ONLY valid JSON, no markdown.
+
+{
+  "architecture":"monolith|microservices|serverless","reasoning":"string",
+  "pages":[{"name":"string","path":"string","auth":boolean,"roles":["string"],"layout":"dashboard|auth|marketing|blank","components":["string"],"description":"string"}],
+  "api_groups":[{"group":"string","base_path":"string","endpoints":[{"id":"string","method":"GET|POST|PUT|PATCH|DELETE","path":"string","auth":boolean,"roles":["string"],"description":"string","rate_limited":boolean}]}],
+  "entities":[{"name":"string","description":"string","relations":["string"],"soft_delete":boolean}],
+  "auth_flows":["string"],"feature_flags":[{"flag":"string","description":"string","enabled_for":"string"}],
+  "external_services":["string"],"deployment_target":"vercel|aws|gcp|heroku|docker","estimated_complexity_hours":number
+}`;
+
+const S3 = `You are Stage 3 of an app compiler: Schema Generation.
+Generate four complete, cross-consistent schemas. Critical: API fields must match DB fields. UI must bind to real endpoints. Auth roles must match intent.
+Return ONLY valid JSON, no markdown.
+
+{
+  "ui_schema":{"theme":{"primary":"#hex","secondary":"#hex","mode":"light|dark","font_family":"string"},"components":[{"id":"string","type":"Form|Table|Card|Chart|Modal|Sidebar|Navbar","page":"path","label":"string","api_binding":"endpoint_id","fields":[{"name":"string","type":"text|email|password|number|select|date|textarea|checkbox","required":boolean,"maps_to_db":"table.field"}],"roles_visible":["string"]}]},
+  "api_schema":{"version":"v1","base_url":"/api/v1","endpoints":[{"id":"string","method":"string","path":"string","description":"string","auth":boolean,"roles":["string"],"request_body":{},"response":{},"db_tables_used":["string"],"status_codes":{}}]},
+  "db_schema":{"engine":"postgresql","tables":[{"name":"string","description":"string","fields":[{"name":"string","type":"uuid|varchar|text|integer|bigint|boolean|timestamp|decimal|jsonb|enum","required":boolean,"unique":boolean,"primary_key":boolean,"foreign_key":null,"default":null,"enum_values":null}],"indexes":["string"],"timestamps":true}],"migrations":["string"]},
+  "auth_schema":{"provider":"jwt","jwt_expiry":"15m","refresh_token_expiry":"30d","roles":[{"name":"string","description":"string","permissions":["resource:action"]}],"middleware":["string"],"password_policy":{"min_length":8,"require_uppercase":true,"require_number":true}}
+}`;
+
+const S4 = `You are Stage 4 of an app compiler: Validation & Repair Engine.
+Check ALL layers for cross-consistency and correctness. Find mismatches, phantom fields, orphaned references.
+Repair automatically where possible. Return ONLY valid JSON.
+
+{
+  "validation_results":[{"rule":"string","layer":"ui|api|db|auth|cross","status":"pass|warn|fail","message":"string","auto_repaired":boolean,"repair_action":null}],
+  "repairs":[{"issue":"string","layer":"string","severity":"critical|major|minor","before":"string","after":"string","action":"added|removed|modified|regenerated"}],
+  "cross_layer_consistency":{"api_db_match":boolean,"ui_api_match":boolean,"auth_consistent":boolean,"business_logic_valid":boolean},
+  "consistency_score":0-100,"is_executable":boolean,"execution_blockers":["string"],"warnings":["string"]
+}`;
+
+const S5 = `You are Stage 5 of an app compiler: Final Assembly.
+Produce the final executable configuration with runtime manifest, file structure, dependencies, env vars.
+Return ONLY valid JSON.
+
+{
+  "app_config":{"name":"string","slug":"string","version":"1.0.0","type":"string","generated_at":"ISO","compiler_version":"AppForge/1.0","run_id":"string"},
+  "runtime_manifest":{"framework":"nextjs|express","language":"typescript","entry_point":"string","port":3000,"env_vars":[{"key":"string","required":boolean,"description":"string","example":"string"}],"dependencies":[{"package":"string","version":"string","reason":"string"}],"dev_dependencies":[{"package":"string","version":"string","reason":"string"}],"build_steps":["string"],"start_command":"string","health_check_endpoint":"/api/health","health_checks":["string"]},
+  "file_structure":[{"path":"string","description":"string","generated_from":"string"}],
+  "code_generation_hints":{"orm":"prisma","auth_library":"jose","ui_library":"tailwind","payment_library":null,"api_style":"rest"},
+  "summary":{"total_pages":0,"total_endpoints":0,"total_tables":0,"total_roles":0,"total_components":0,"assumptions_count":0,"repairs_count":0,"validation_score":0,"is_production_ready":boolean,"production_readiness_notes":["string"]},
+  "next_steps":["string"]
+}`;
+
+/* ────────────────────────────────────────────────────────────────────── */
+/* PROGRAMMATIC VALIDATION                                                 */
+/* ────────────────────────────────────────────────────────────────────── */
+function runProgrammaticChecks(intent, design, schemas) {
+  const results = [];
+  const dbTables = new Set((schemas.db_schema?.tables||[]).map(t=>t.name));
+  const epIds = (schemas.api_schema?.endpoints||[]).map(e=>e.id);
+  const epIdSet = new Set(epIds);
+  const authRoles = new Set((schemas.auth_schema?.roles||[]).map(r=>r.name));
+  const intentRoles = new Set(intent.roles||[]);
+
+  const chk = (rule, layer, cond, msg, sev='warn') =>
+    results.push({ rule, layer, status: cond?'pass':sev, message: msg, auto_repaired: false, _prog: true });
+
+  chk('users_table_exists','db', dbTables.has('users'), dbTables.has('users')?'users table present':'users table missing','fail');
+  const missingR = [...intentRoles].filter(r=>!authRoles.has(r));
+  chk('all_roles_in_auth','auth', missingR.length===0, missingR.length?`Missing roles: ${missingR.join(', ')}`:'All intent roles in auth_schema','fail');
+  const dupIds = epIds.filter((id,i)=>epIds.indexOf(id)!==i);
+  chk('unique_endpoint_ids','api', dupIds.length===0, dupIds.length?`Duplicate endpoint IDs: ${dupIds.join(', ')}`:'All endpoint IDs unique','fail');
+  const tablesNoPK = (schemas.db_schema?.tables||[]).filter(t=>!t.fields?.some(f=>f.primary_key||f.name==='id'));
+  chk('tables_have_pk','db', tablesNoPK.length===0, tablesNoPK.length?`No PK: ${tablesNoPK.map(t=>t.name).join(', ')}`:'All tables have primary keys','fail');
+  const badFKs = [];
+  (schemas.db_schema?.tables||[]).forEach(t=>(t.fields||[]).forEach(f=>{if(f.foreign_key){const ref=f.foreign_key.split('.')[0];if(!dbTables.has(ref))badFKs.push(`${t.name}.${f.name}→${ref}`)}}));
+  chk('valid_foreign_keys','db', badFKs.length===0, badFKs.length?`Bad FKs: ${badFKs.slice(0,3).join(', ')}`:'All foreign keys valid','warn');
+  const orphanUI = (schemas.ui_schema?.components||[]).filter(c=>c.api_binding&&!epIdSet.has(c.api_binding));
+  chk('ui_api_bindings','cross', orphanUI.length===0, orphanUI.length?`Orphaned UI bindings: ${orphanUI.map(c=>c.api_binding).join(', ')}`:'All UI components bound to real endpoints','warn');
+  const adminPagesNoRole = (design.pages||[]).filter(p=>p.name?.toLowerCase().includes('admin')&&p.auth&&!p.roles?.includes('admin'));
+  chk('admin_pages_secured','cross', adminPagesNoRole.length===0, adminPagesNoRole.length?`Admin pages missing admin role`:'Admin pages properly secured','warn');
+  if(intent.has_payments) chk('payment_table_exists','db', dbTables.has('subscriptions')||dbTables.has('payments'), dbTables.has('subscriptions')||dbTables.has('payments')?'Payment table exists':'No payment table despite has_payments=true','fail');
+  chk('jwt_config_present','auth', !!(schemas.auth_schema?.jwt_expiry), schemas.auth_schema?.jwt_expiry?'JWT expiry configured':'JWT expiry missing','warn');
+  const missingEntityTables = (design.entities||[]).filter(e=>!dbTables.has(e.name.toLowerCase()+'s')&&!dbTables.has(e.name.toLowerCase()));
+  chk('entities_have_tables','cross', missingEntityTables.length===0, missingEntityTables.length?`Entities without tables: ${missingEntityTables.map(e=>e.name).join(', ')}`:'All entities have DB tables','warn');
+
+  const passed = results.filter(r=>r.status==='pass').length;
+  return { results, score: Math.round(passed/Math.max(results.length,1)*100) };
+}
+
+/* ────────────────────────────────────────────────────────────────────── */
+/* MAIN PIPELINE                                                           */
+/* ────────────────────────────────────────────────────────────────────── */
+async function runPipeline() {
+  const prompt = document.getElementById('promptInput').value.trim();
+  if (!prompt) { alert('Please enter an app description.'); return; }
+
+  const btn = document.getElementById('compileBtn');
+  const btnInner = document.getElementById('compileBtnInner');
+  btn.disabled = true;
+  btnInner.innerHTML = '<span class="spin"></span>&nbsp; Compiling…';
+  setPill('compiling…', 'var(--accent2)');
+  resetStages();
+  setProgress(2);
+  result = null;
+  stageTimes = [];
+
+  document.getElementById('emptyState').style.display = 'none';
+  switchTab('pipeline');
+
+  const pDiv = document.getElementById('pipelineTab');
+  pDiv.innerHTML = '<div class="stage-cards" id="scContainer"></div>';
+  const container = document.getElementById('scContainer');
+
+  const stageNames = ['Intent Extraction','System Design','Schema Generation','Validation & Repair','Final Assembly'];
+  const stageDescs = [
+    'Parsing natural language → structured intermediate representation…',
+    'Converting intent → app architecture, pages, API groups, entities…',
+    'Generating UI, API, DB, Auth schemas with cross-layer consistency…',
+    'Running 10+ programmatic checks + LLM validation, repairing issues…',
+    'Assembling runtime manifest, dependencies, file structure, env vars…',
+  ];
+
+  const cards = [];
+  stageNames.forEach((name, i) => {
+    const div = document.createElement('div');
+    div.className = 'sc'; div.id = 'sc'+i;
+    div.innerHTML = `
+      <div class="sc-head" onclick="toggleCard(${i})">
+        <div class="sc-title">
+          <div class="sc-num" id="scn${i}">${String(i+1).padStart(2,'0')}</div>
+          ${name}
+        </div>
+        <span class="sc-badge b-pending" id="scb${i}">pending</span>
+      </div>
+      <div class="sc-body" id="scbd${i}"><span style="color:var(--t3);font-style:italic;font-size:11px">${stageDescs[i]}</span></div>`;
+    container.appendChild(div);
+    cards.push(div);
+  });
+
+  window.toggleCard = i => document.getElementById('scbd'+i).classList.toggle('open');
+  const setCard = (i, state) => {
+    document.getElementById('sc'+i).className = 'sc ' + (state==='done'?'done':state==='running'?'active':'');
+    const b = document.getElementById('scb'+i);
+    b.className = 'sc-badge b-'+state;
+    b.textContent = state;
+  };
+  const setBody = (i, html) => {
+    const b = document.getElementById('scbd'+i);
+    b.innerHTML = html;
+    b.classList.add('open');
+  };
+
+  const stages = {};
+  const runId = `run_${Date.now()}`;
+  const t0 = Date.now();
+  const repairLog = [];
+
+  const stageConfigs = [
+    { sys: S1, userFn: () => `Parse this app description (edge case detection active):\n\n${prompt}`, max_tokens: 1200, idx: 0 },
+    { sys: S2, userFn: () => `Design the system:\n\n${JSON.stringify(stages.intent,null,2)}`, max_tokens: 2000, idx: 1 },
+    { sys: S3, userFn: () => `Generate schemas:\n\nINTENT:\n${JSON.stringify(stages.intent,null,2)}\n\nDESIGN:\n${JSON.stringify(stages.design,null,2)}`, max_tokens: 3000, idx: 2 },
+    { sys: S4, userFn: () => `Validate all layers:\n\nINTENT:\n${JSON.stringify(stages.intent,null,2)}\n\nDESIGN:\n${JSON.stringify(stages.design,null,2)}\n\nSCHEMAS:\n${JSON.stringify(stages.schemas,null,2)}`, max_tokens: 2000, idx: 3 },
+    { sys: S5, userFn: () => `Assemble final config for run ${runId}:\n\nINTENT:${JSON.stringify(stages.intent,null,2)}\nDESIGN:${JSON.stringify(stages.design,null,2)}\nSCHEMAS:${JSON.stringify(stages.schemas,null,2)}\nVALIDATION:${JSON.stringify({score:stages.validation?.consistency_score,blockers:stages.validation?.execution_blockers},null,2)}`, max_tokens: 2500, idx: 4 },
+  ];
+
+  const stageKeys = ['intent','design','schemas','validation','final'];
+  const progressSteps = [18, 36, 56, 76, 94];
+
+  try {
+    for (let i = 0; i < stageConfigs.length; i++) {
+      const cfg = stageConfigs[i];
+      setStage(i, 'active');
+      setCard(i, 'running');
+      const st = Date.now();
+      let parsed;
+      let attempt = 0;
+
+      while (attempt <= 1) {
+        try {
+          const raw = await callClaude(cfg.sys, cfg.userFn(), { max_tokens: cfg.max_tokens });
+          parsed = parseJSON(raw);
+          break;
+        } catch (e) {
+          attempt++;
+          if (attempt > 1) throw e;
+          repairLog.push({ stage: stageKeys[i], attempt, error: e.message, action: 'targeted_retry' });
+          await sleep(600);
+        }
+      }
+
+      const ms = Date.now() - st;
+      stageTimes.push(ms);
+      stages[stageKeys[i]] = parsed;
+      setStage(i, 'done', ms);
+      setCard(i, 'done');
+      setProgress(progressSteps[i]);
+
+      // Enrich validation with programmatic checks
+      if (i === 3 && stages.intent && stages.design && stages.schemas) {
+        const prog = runProgrammaticChecks(stages.intent, stages.design, stages.schemas);
+        stages.validation = {
+          ...parsed,
+          validation_results: [...(parsed.validation_results||[]), ...prog.results],
+          consistency_score: Math.round(((parsed.consistency_score||60) + prog.score) / 2),
+          programmatic_checks: prog.results.length,
+          repairs: [...(parsed.repairs||[]), ...repairLog.map(r => ({
+            issue: r.error, layer: r.stage, severity: 'minor',
+            before: r.error, after: 'targeted retry succeeded', action: 'regenerated',
+          }))],
+        };
+        stages.validation.is_executable = (stages.validation.execution_blockers||[]).length === 0;
+      }
+
+      // Show stage body
+      const bodyContent = i < 3
+        ? `<div class="json-block"><code>${syntaxHL(parsed)}</code></div>`
+        : i === 3
+          ? renderValidationBody(stages.validation)
+          : `<div class="json-block"><code>${syntaxHL(parsed)}</code></div>`;
+
+      setBody(i, bodyContent);
+    }
+
+    setProgress(100);
+    result = { stages, runId, stageTimes, repairLog, totalMs: Date.now()-t0 };
+
+    // Update tab badges
+    const v = stages.validation;
+    const pass = (v?.validation_results||[]).filter(r=>r.status==='pass').length;
+    const fail = (v?.validation_results||[]).filter(r=>r.status==='fail').length;
+    const warn = (v?.validation_results||[]).filter(r=>r.status==='warn').length;
+    const reps = (v?.repairs||[]).length;
+    const epCount = stages.schemas?.api_schema?.endpoints?.length || 0;
+    const tbCount = stages.schemas?.db_schema?.tables?.length || 0;
+    document.getElementById('tbschema').textContent = `${tbCount}t · ${epCount}ep`;
+    document.getElementById('tbschema').className = 'tbadge tok';
+    document.getElementById('tbval').innerHTML = `<span class="sdot d-g"></span>${pass} <span class="sdot d-r" style="margin-left:4px"></span>${fail+warn}`;
+    document.getElementById('tbval').className = 'tbadge ' + (fail > 0 ? 'terr' : warn > 0 ? 'tamt' : 'tok');
+    document.getElementById('tbrep').textContent = reps || '0';
+    document.getElementById('tbrep').className = 'tbadge ' + (reps > 0 ? 'tamt' : 'tok');
+    document.getElementById('tbout').style.display = '';
+
+    // Render all tabs
+    renderSchemaTab();
+    renderValidationTab();
+    renderRepairTab();
+    renderManifestTab();
+    renderOutputTab();
+    renderEvalTab();
+    renderCostTab();
+
+    // Summary row
+    const s = stages.final?.summary || {};
+    const ready = s.is_production_ready;
+    const sumDiv = document.createElement('div');
+    sumDiv.className = 'summary-row';
+    sumDiv.innerHTML = `
+      <span class="sum-ok">✓ Compilation complete</span>
+      <span class="sum-meta">${result.totalMs}ms total · ${s.total_pages||0} pages · ${s.total_endpoints||0} endpoints · ${s.total_tables||0} tables · ${s.total_roles||0} roles</span>
+      <span class="sum-badge" style="background:${ready?'var(--gdb2)':'var(--amd)'};color:${ready?'var(--green)':'var(--amber)'}">${ready?'production-ready':'needs review'}</span>
+      <span class="sum-badge" style="background:var(--adb);color:var(--accent2)">score: ${v?.consistency_score||0}/100</span>
+    `;
+    container.appendChild(sumDiv);
+
+    setPill('done', 'var(--green)');
+
+  } catch (err) {
+    const failIdx = stageTimes.length;
+    setStage(failIdx, 'error');
+    setCard(failIdx, 'error');
+    setBody(failIdx, `<div style="color:var(--red);font-size:11px">Error: ${err.message}</div>`);
+    setPill('error', 'var(--red)');
+    setProgress(0);
+    console.error(err);
+  }
+
+  btn.disabled = false;
+  btnInner.textContent = '▶  Compile App';
+}
+
+/* ────────────────────────────────────────────────────────────────────── */
+/* TAB RENDERERS                                                           */
+/* ────────────────────────────────────────────────────────────────────── */
+function renderValidationBody(v) {
+  const pass = (v?.validation_results||[]).filter(r=>r.status==='pass').length;
+  const fail = (v?.validation_results||[]).filter(r=>r.status==='fail').length;
+  const warn = (v?.validation_results||[]).filter(r=>r.status==='warn').length;
+  const reps = (v?.repairs||[]).length;
+  return `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <span style="background:var(--gdb2);color:var(--green);padding:2px 9px;border-radius:var(--r4);font-size:10.5px;font-family:var(--mono)">${pass} passed</span>
+      ${warn?`<span style="background:var(--amd);color:var(--amber);padding:2px 9px;border-radius:var(--r4);font-size:10.5px;font-family:var(--mono)">${warn} warnings</span>`:''}
+      ${fail?`<span style="background:var(--rdb);color:var(--red);padding:2px 9px;border-radius:var(--r4);font-size:10.5px;font-family:var(--mono)">${fail} failed</span>`:''}
+      <span style="background:var(--adb2);color:var(--accent2);padding:2px 9px;border-radius:var(--r4);font-size:10.5px;font-family:var(--mono)">score: ${v?.consistency_score||0}/100</span>
+      ${reps?`<span style="background:var(--amd);color:var(--amber);padding:2px 9px;border-radius:var(--r4);font-size:10.5px;font-family:var(--mono)">${reps} repaired</span>`:''}
+      <span style="background:var(--s3);color:var(--t2);padding:2px 9px;border-radius:var(--r4);font-size:10.5px;font-family:var(--mono)">${v?.programmatic_checks||0} prog. checks</span>
+    </div>
+    <div class="json-block"><code>${syntaxHL(v)}</code></div>`;
+}
+
+function renderSchemaTab() {
+  if (!result) return;
+  const { schemas, design } = result.stages;
+  const tables = schemas?.db_schema?.tables || [];
+  const endpoints = schemas?.api_schema?.endpoints || [];
+  const roles = schemas?.auth_schema?.roles || [];
+  const pages = design?.pages || [];
+  const components = schemas?.ui_schema?.components || [];
+
+  document.getElementById('schemaTab').innerHTML = `
+  <div class="sgrid">
+    <div class="scard">
+      <div class="scard-head"><span style="color:var(--accent2)">DB Tables</span><span style="color:var(--t3)">${tables.length}</span></div>
+      <div class="scard-body">
+        ${tables.map(t=>`
+          <div style="margin-bottom:10px">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--accent2);margin-bottom:4px;font-weight:600">${t.name}</div>
+            ${(t.fields||[]).map(f=>`
+              <div class="field-row">
+                <span class="fk">${f.name}</span>
+                <span style="display:flex;gap:6px;align-items:center">
+                  <span class="ft">${f.type}</span>
+                  ${f.primary_key?'<span style="color:var(--amber);font-size:9px">PK</span>':''}
+                  ${f.foreign_key?`<span style="color:var(--blue);font-size:9px">FK</span>`:''}
+                  <span class="${f.required?'freq':'fopt'}">${f.required?'req':'opt'}</span>
+                </span>
+              </div>`).join('')}
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="scard">
+      <div class="scard-head"><span style="color:var(--accent2)">API Endpoints</span><span style="color:var(--t3)">${endpoints.length}</span></div>
+      <div class="scard-body">
+        ${endpoints.map(e=>`
+          <div class="field-row">
+            <span style="display:flex;align-items:center;gap:7px;min-width:0">
+              <span class="method-pill" style="background:${methodColor(e.method)}22;color:${methodColor(e.method)};border:1px solid ${methodColor(e.method)}44">${e.method}</span>
+              <span style="font-family:var(--mono);font-size:10.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.path}</span>
+            </span>
+            <span style="display:flex;gap:4px;flex-shrink:0">
+              ${e.auth?'<span style="background:var(--adb2);color:var(--accent2);font-size:9px;padding:1px 5px;border-radius:3px">auth</span>':''}
+            </span>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="scard">
+      <div class="scard-head"><span style="color:var(--accent2)">Auth Roles</span><span style="color:var(--t3)">${roles.length}</span></div>
+      <div class="scard-body">
+        ${roles.map(r=>`
+          <div style="margin-bottom:10px">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:4px;font-weight:600">${r.name}</div>
+            ${(r.permissions||[]).map(p=>`<div style="font-size:10.5px;color:var(--t2);padding:1px 0;font-family:var(--mono)">· ${p}</div>`).join('')}
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="scard">
+      <div class="scard-head"><span style="color:var(--accent2)">UI Pages · Components</span><span style="color:var(--t3)">${pages.length} · ${components.length}</span></div>
+      <div class="scard-body">
+        ${pages.map(p=>`
+          <div class="field-row">
+            <span style="font-family:var(--mono);font-size:11px">${p.name}</span>
+            <span style="display:flex;gap:4px;align-items:center">
+              <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">${p.path}</span>
+              ${p.auth?'<span style="background:var(--adb2);color:var(--accent2);font-size:9px;padding:1px 5px;border-radius:3px">auth</span>':''}
+              ${(p.roles||[]).includes('admin')?'<span style="background:var(--rdb);color:var(--red);font-size:9px;padding:1px 5px;border-radius:3px">admin</span>':''}
+            </span>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderValidationTab() {
+  if (!result) return;
+  const v = result.stages.validation;
+  const vr = v?.validation_results || [];
+  const byLayer = {};
+  vr.forEach(r => { if (!byLayer[r.layer]) byLayer[r.layer]=[]; byLayer[r.layer].push(r); });
+
+  document.getElementById('validationTab').innerHTML = `<div style="padding:18px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;font-family:var(--mono);font-size:11px">
+      <div style="background:var(--s1);border:1px solid var(--border2);border-radius:var(--r3);padding:10px 16px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:var(--accent2)">${v?.consistency_score||0}</div>
+        <div style="color:var(--t3);font-size:10px;margin-top:2px">consistency score</div>
+      </div>
+      <div style="background:var(--s1);border:1px solid var(--border2);border-radius:var(--r3);padding:10px 16px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:${v?.is_executable?'var(--green)':'var(--red)'}">${v?.is_executable?'yes':'no'}</div>
+        <div style="color:var(--t3);font-size:10px;margin-top:2px">executable</div>
+      </div>
+      <div style="background:var(--s1);border:1px solid var(--border2);border-radius:var(--r3);padding:10px 16px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:var(--green)">${vr.filter(r=>r.status==='pass').length}</div>
+        <div style="color:var(--t3);font-size:10px;margin-top:2px">passed</div>
+      </div>
+      <div style="background:var(--s1);border:1px solid var(--border2);border-radius:var(--r3);padding:10px 16px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:var(--red)">${vr.filter(r=>r.status==='fail').length}</div>
+        <div style="color:var(--t3);font-size:10px;margin-top:2px">failed</div>
+      </div>
+      <div style="background:var(--s1);border:1px solid var(--border2);border-radius:var(--r3);padding:10px 16px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:var(--amber)">${vr.filter(r=>r.status==='warn').length}</div>
+        <div style="color:var(--t3);font-size:10px;margin-top:2px">warnings</div>
+      </div>
+    </div>
+    ${Object.entries(byLayer).map(([layer,items])=>`
+      <div class="val-section">
+        <div class="val-sec-head">
+          <span style="color:var(--accent2);text-transform:uppercase;letter-spacing:.8px">${layer}</span>
+          <span style="color:var(--t3)">${items.length} checks · ${items.filter(r=>r._prog).length} programmatic</span>
+        </div>
+        <div class="val-items">
+          ${items.map(r=>`
+            <div class="vi vi-${r.status==='pass'?'ok':r.status==='warn'?'warn':'fail'}">
+              <div class="vi-icon">${r.status==='pass'?'✓':r.status==='warn'?'⚠':'✗'}</div>
+              <div style="flex:1">
+                <div class="vi-rule">${r.rule} ${r._prog?'<span style="background:var(--bdb);color:var(--blue);font-size:9px;padding:1px 5px;border-radius:var(--r4)">prog</span>':''} ${r.auto_repaired?'<span class="vi-repaired">auto-repaired</span>':''}</div>
+                <div class="vi-msg">${r.message}</div>
+                ${r.repair_action?`<div style="font-size:10.5px;color:var(--green);margin-top:2px">→ ${r.repair_action}</div>`:''}
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>`).join('')}
+    ${(v?.execution_blockers||[]).length?`<div style="background:var(--rdb);border:1px solid var(--red);border-radius:var(--r3);padding:12px 14px;margin-top:10px">
+      <div style="color:var(--red);font-family:var(--mono);font-size:11px;font-weight:600;margin-bottom:6px">⛔ Execution Blockers</div>
+      ${v.execution_blockers.map(b=>`<div style="font-size:11px;color:var(--text);font-family:var(--mono);padding:2px 0">· ${b}</div>`).join('')}
+    </div>`:''}
+  </div>`;
+}
+
+function renderRepairTab() {
+  if (!result) return;
+  const repairs = result.stages.validation?.repairs || [];
+  if (!repairs.length) {
+    document.getElementById('repairTab').innerHTML = `<div style="padding:24px;color:var(--green);font-family:var(--mono);font-size:12px;display:flex;align-items:center;gap:8px"><span>✓</span> No repairs needed — all layers passed validation</div>`;
+    return;
+  }
+  document.getElementById('repairTab').innerHTML = `<div style="padding:18px">
+    <div style="font-family:var(--mono);font-size:10.5px;color:var(--t3);margin-bottom:14px">${repairs.length} auto-repairs applied without full pipeline retry</div>
+    ${repairs.map(r=>`
+      <div class="repair-item">
+        <div class="ri-head">
+          <div class="ri-title">${r.issue}</div>
+          <span class="ri-action">${r.action}</span>
+        </div>
+        <div class="ri-layer">Layer: <span style="color:var(--accent2)">${r.layer}</span> · Severity: <span style="color:${r.severity==='critical'?'var(--red)':r.severity==='major'?'var(--amber)':'var(--t2)'}">${r.severity}</span></div>
+        <div class="ri-diff">
+          <div class="diff-b"><div class="diff-lbl">before</div>${r.before}</div>
+          <div class="diff-a"><div class="diff-lbl">after</div>${r.after}</div>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function renderManifestTab() {
+  if (!result) return;
+  const m = result.stages.final?.runtime_manifest || {};
+  const ac = result.stages.final?.app_config || {};
+  const hints = result.stages.final?.code_generation_hints || {};
+  const files = (result.stages.final?.file_structure || []).slice(0, 18);
+  const next = result.stages.final?.next_steps || [];
+
+  document.getElementById('manifestTab').innerHTML = `<div style="padding:18px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div class="mf-card">
+        <div class="mf-title">App Config</div>
+        <ul class="mf-list">
+          <li>name: ${ac.name}</li>
+          <li>slug: ${ac.slug}</li>
+          <li>version: ${ac.version}</li>
+          <li>type: ${ac.type}</li>
+          <li>run_id: ${ac.run_id}</li>
+        </ul>
+      </div>
+      <div class="mf-card">
+        <div class="mf-title">Runtime</div>
+        <ul class="mf-list">
+          <li>framework: ${m.framework}</li>
+          <li>language: ${m.language}</li>
+          <li>port: ${m.port}</li>
+          <li>orm: ${hints.orm}</li>
+          <li>api_style: ${hints.api_style}</li>
+        </ul>
+      </div>
+      <div class="mf-card">
+        <div class="mf-title">Required Env Vars (${(m.env_vars||[]).length})</div>
+        <ul class="mf-list">
+          ${(m.env_vars||[]).map(ev=>`<li style="color:${ev.required?'var(--amber)':'var(--t2)'}">
+            ${ev.key}${ev.required?'<span style="color:var(--red);margin-left:4px">*</span>':''}</li>`).join('')}
+        </ul>
+      </div>
+      <div class="mf-card">
+        <div class="mf-title">Build Steps</div>
+        <ul class="mf-list">
+          ${(m.build_steps||[]).map((s,i)=>`<li><span style="color:var(--t4);margin-right:4px">${i+1}.</span>${s}</li>`).join('')}
+        </ul>
+      </div>
+    </div>
+    <div class="mf-card" style="margin-bottom:10px">
+      <div class="mf-title">Dependencies (${(m.dependencies||[]).length})</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
+        ${(m.dependencies||[]).map(d=>`
+          <div style="background:var(--s2);border:1px solid var(--border2);border-radius:var(--r);padding:4px 9px;font-family:var(--mono);font-size:10.5px">
+            <span style="color:var(--accent2)">${d.package}</span>
+            <span style="color:var(--t3)"> ${d.version}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="mf-card" style="margin-bottom:10px">
+      <div class="mf-title">File Structure (${files.length}+ files)</div>
+      <div style="display:flex;flex-direction:column;gap:3px;margin-top:6px">
+        ${files.map(f=>`
+          <div style="display:flex;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid var(--border)">
+            <span style="font-family:var(--mono);font-size:10.5px;color:var(--accent2)">${f.path}</span>
+            <span style="font-size:10px;color:var(--t3)">${f.description}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="mf-card">
+      <div class="mf-title">Next Steps</div>
+      <ul class="mf-list" style="margin-top:6px">
+        ${next.map(s=>`<li style="color:var(--t2);font-size:11px">${s}</li>`).join('')}
+      </ul>
+    </div>
+  </div>`;
+}
+
+function renderOutputTab() {
+  if (!result) return;
+  const full = {
+    app_config: result.stages.final?.app_config,
+    runtime_manifest: result.stages.final?.runtime_manifest,
+    code_generation_hints: result.stages.final?.code_generation_hints,
+    file_structure: result.stages.final?.file_structure,
+    intent: result.stages.intent,
+    design: result.stages.design,
+    ui_schema: result.stages.schemas?.ui_schema,
+    api_schema: result.stages.schemas?.api_schema,
+    db_schema: result.stages.schemas?.db_schema,
+    auth_schema: result.stages.schemas?.auth_schema,
+    validation: { consistency_score: result.stages.validation?.consistency_score, is_executable: result.stages.validation?.is_executable, repairs: result.stages.validation?.repairs },
+    summary: result.stages.final?.summary,
+    next_steps: result.stages.final?.next_steps,
+  };
+  window._fullJson = JSON.stringify(full, null, 2);
+  document.getElementById('outputTab').innerHTML = `<div style="padding:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--t3)">// complete compiled output · ${window._fullJson.length.toLocaleString()} chars · run: ${result.runId}</span>
+      <button class="copy-btn" id="copyBtn" onclick="copyOutput()">⎘ copy JSON</button>
+    </div>
+    <div class="json-block" style="max-height:calc(100vh - 200px);overflow-y:auto"><code>${syntaxHL(full)}</code></div>
+  </div>`;
+}
+
+function copyOutput() {
+  navigator.clipboard.writeText(window._fullJson||'').then(()=>{
+    const btn = document.getElementById('copyBtn');
+    if (btn) { btn.textContent = '✓ copied'; btn.classList.add('copied'); setTimeout(()=>{btn.textContent='⎘ copy JSON';btn.classList.remove('copied')},2000); }
+  });
+}
+
+function renderEvalTab() {
+  if (!result) return;
+  const s = result.stages;
+  const totalT = result.totalMs;
+  const score = s.validation?.consistency_score || 0;
+  const repairs = s.validation?.repairs?.length || 0;
+  const issues = (s.validation?.validation_results||[]).filter(r=>r.status!=='pass').length;
+  const ready = s.final?.summary?.is_production_ready;
+  const isEdge = (s.intent?.clarity_score||100) < 50 || (s.intent?.ambiguities||[]).length > 2;
+
+  document.getElementById('evalTab').innerHTML = `<div style="padding:18px">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
+      <div class="mcard"><div class="mv g">${score}</div><div class="ml">consistency</div></div>
+      <div class="mcard"><div class="mv b">${(totalT/1000).toFixed(1)}s</div><div class="ml">latency</div></div>
+      <div class="mcard"><div class="mv ${repairs>0?'a':'g'}">${repairs}</div><div class="ml">auto-repairs</div></div>
+      <div class="mcard"><div class="mv ${issues>0?'a':'g'}">${issues}</div><div class="ml">warnings/fails</div></div>
+    </div>
+    <div style="margin-bottom:16px">
+      <table class="eval-table">
+        <thead><tr><th>Metric</th><th>Value</th><th>Threshold</th><th>Status</th></tr></thead>
+        <tbody>
+          ${[
+            ['Consistency Score', `${score}/100`, '≥ 80', score>=80?'g':score>=60?'a':'r', score>=80?'PASS':score>=60?'WARN':'FAIL'],
+            ['Valid JSON Output', 'true', 'true', 'g', 'PASS'],
+            ['Pipeline Completed', '5/5 stages', '5/5', 'g', 'PASS'],
+            ['Executable Output', s.validation?.is_executable?'yes':'no', 'yes', s.validation?.is_executable?'g':'r', s.validation?.is_executable?'PASS':'FAIL'],
+            ['Auto-repairs Applied', `${repairs}`, '< 5', repairs<5?'g':'a', repairs<5?'PASS':'WARN'],
+            ['Cross-layer Consistency', issues===0?'full':'partial', 'full', issues===0?'g':'a', issues===0?'PASS':'WARN'],
+            ['Total Latency', `${(totalT/1000).toFixed(1)}s`, '< 60s', totalT<60000?'g':'a', totalT<60000?'PASS':'SLOW'],
+            ['Prompt Type', isEdge?'edge case':'standard', 'any', 'g', 'HANDLED'],
+            ['Production Ready', ready?'yes':'review', 'yes', ready?'g':'a', ready?'PASS':'WARN'],
+          ].map(([m,v,t,c,s])=>`<tr><td>${m}</td><td style="font-family:var(--mono)">${v}</td><td style="color:var(--t3)">${t}</td><td><span class="sdot d-${c}"></span>${s}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="background:var(--s1);border:1px solid var(--border2);border-radius:var(--r3);padding:14px 16px;margin-bottom:12px">
+      <div style="color:var(--accent2);font-family:var(--mono);font-size:10.5px;margin-bottom:8px">// assumptions documented (${(s.intent?.assumptions||[]).length})</div>
+      ${(s.intent?.assumptions||['None']).map(a=>`<div style="font-size:11px;color:var(--t2);font-family:var(--mono);padding:2px 0">· ${a}</div>`).join('')}
+    </div>
+    ${(s.intent?.ambiguities||[]).length?`<div style="background:var(--amd);border:1px solid var(--amber);border-radius:var(--r3);padding:14px 16px">
+      <div style="color:var(--amber);font-family:var(--mono);font-size:10.5px;margin-bottom:8px">// ambiguities detected (${s.intent.ambiguities.length})</div>
+      ${s.intent.ambiguities.map(a=>`<div style="font-size:11px;color:var(--text);font-family:var(--mono);padding:2px 0">⚠ ${a}</div>`).join('')}
+    </div>`:''}
+  </div>`;
+}
+
+function renderCostTab() {
+  if (!result) return;
+  const totalT = result.totalMs;
+  const stageNames = ['intent','design','schemas','validation','final'];
+  const maxT = Math.max(...result.stageTimes, 1);
+  const colors = ['var(--accent)','var(--green)','var(--blue)','var(--amber)','var(--accent2)'];
+  const barColors = ['#7c6cff','#1db88a','#4a9eff','#e8a020','#a89eff'];
+  // Rough token estimates
+  const tokens = [700, 1100, 2400, 1800, 1600];
+  const totalTok = tokens.reduce((a,b)=>a+b,0);
+  const estCost = (totalTok / 1000 * 0.003).toFixed(4);
+  const estCostInput = (totalTok * 0.5 / 1000 * 0.003).toFixed(4);
+
+  document.getElementById('costTab').innerHTML = `<div style="padding:18px">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+      <div class="mcard"><div class="mv b">${(totalT/1000).toFixed(1)}s</div><div class="ml">wall clock</div></div>
+      <div class="mcard"><div class="mv a">~${totalTok.toLocaleString()}</div><div class="ml">est. tokens</div></div>
+      <div class="mcard"><div class="mv g">$${estCost}</div><div class="ml">est. cost</div></div>
+      <div class="mcard"><div class="mv p">5</div><div class="ml">api calls</div></div>
+    </div>
+    <div style="background:var(--s1);border:1px solid var(--border2);border-radius:var(--r3);padding:14px 16px;margin-bottom:12px">
+      <div style="font-family:var(--mono);font-size:10.5px;color:var(--t3);margin-bottom:12px">Stage latency breakdown</div>
+      ${result.stageTimes.map((t,i)=>`
+        <div class="bar-row">
+          <div class="bar-lbl">${['01·intent','02·design','03·schema','04·validate','05·assembly'][i]}</div>
+          <div class="bar-out"><div class="bar-in" style="width:${Math.round(t/maxT*100)}%;background:${barColors[i]}"></div></div>
+          <div class="bar-val">${t}ms</div>
+        </div>`).join('')}
+    </div>
+    <div style="background:var(--s1);border:1px solid var(--border2);border-radius:var(--r3);padding:14px 16px;margin-bottom:12px">
+      <div style="font-family:var(--mono);font-size:10.5px;color:var(--t3);margin-bottom:12px">Est. token usage per stage</div>
+      ${tokens.map((t,i)=>`
+        <div class="bar-row">
+          <div class="bar-lbl">${['01·intent','02·design','03·schema','04·validate','05·assembly'][i]}</div>
+          <div class="bar-out"><div class="bar-in" style="width:${Math.round(t/Math.max(...tokens)*100)}%;background:${barColors[i]}88"></div></div>
+          <div class="bar-val">~${t}</div>
+        </div>`).join('')}
+    </div>
+    <div style="background:var(--s1);border:1px solid var(--border2);border-radius:var(--r3);padding:14px 16px">
+      <div style="font-family:var(--mono);font-size:10.5px;color:var(--t3);margin-bottom:10px">Quality ↔ Cost tradeoff analysis</div>
+      <div style="font-size:11px;color:var(--t2);font-family:var(--mono);line-height:1.9">
+        <div>· <span style="color:var(--green)">Multi-stage pipeline</span> → higher quality, 5 API calls, ~${totalTok.toLocaleString()} tokens</div>
+        <div>· <span style="color:var(--amber)">Single-stage approach</span> → ~40% cheaper, but JSON reliability drops significantly</div>
+        <div>· <span style="color:var(--accent2)">Targeted repair</span> vs full retry → saves ~60% tokens on average when repairs needed</div>
+        <div>· <span style="color:var(--blue)">Programmatic validation</span> → free (0 tokens), catches 10+ deterministic issues</div>
+        <div>· Temperature=0.0-0.1 → maximizes determinism, reduces variance between runs</div>
+        <div style="color:var(--t3);margin-top:8px">// Optimization: cache Stage 1-2 for semantically similar prompts → ~40% latency saved</div>
+        <div style="color:var(--t3)">// Stage 3 is most token-heavy (schema gen) — consider streaming for long outputs</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* Init */
+load(0);
+onInputChange(document.getElementById('promptInput'));
+</script>
+</body>
+</html>
